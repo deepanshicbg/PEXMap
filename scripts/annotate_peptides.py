@@ -1,82 +1,153 @@
 import pickle
-import sys
-from collections import Counter
+import argparse
+from collections import defaultdict, Counter
 
-kmer_file = sys.argv[1]
-db_file = sys.argv[2]
-output_file = sys.argv[3]
+
+parser = argparse.ArgumentParser(description="Annotate experimental peptides using 8-mer database")
+
+parser.add_argument("--kmers", required=True)
+parser.add_argument("--database", required=True)
+parser.add_argument("--organism", required=False)
+parser.add_argument("--output", required=True)
+
+args = parser.parse_args()
+
+kmer_file = args.kmers
+db_file = args.database
+output_file = args.output
+
+
+#####################################
+# load database
+#####################################
+
+print("Loading database:", db_file)
 
 with open(db_file, "rb") as f:
     db = pickle.load(f)
 
-gene_counter = Counter()
-transcript_counter = Counter()
-feature_counter = Counter()
+print("Total peptides in DB:", len(db))
 
-annotations = []
+
+#####################################
+# store kmers per experimental peptide
+#####################################
+
+pep_kmers = defaultdict(list)
 
 with open(kmer_file) as f:
-
     for line in f:
 
-        pep = line.strip()
+        parts = line.strip().split()
 
-        if pep not in db:
+        if len(parts) != 2:
             continue
 
-        for entry in db[pep]:
+        exp_pep, kmer = parts
+        pep_kmers[exp_pep].append(kmer)
 
-            gene = entry["gene_id"]
-            feature = entry["feature_id"]
-            transcripts = entry["transcript_ids"]
+
+#####################################
+# annotation aggregation
+#####################################
+
+results = []
+
+for exp_pep, kmers in pep_kmers.items():
+
+    gene_counter = Counter()
+    transcript_counter = Counter()
+
+    junction_counter = Counter()
+    exon_counter = Counter()
+
+    for kmer in kmers:
+
+        if kmer not in db:
+            continue
+
+        for entry in db[kmer]:
+
+            gene = entry.get("gene_id")
+            feature = entry.get("feature_id")
+            transcripts = entry.get("transcript_ids", [])
 
             gene_counter[gene] += 1
-            feature_counter[feature] += 1
 
             for tr in transcripts:
                 transcript_counter[tr] += 1
 
-            annotations.append((pep, gene, feature, transcripts))
+            if feature and "," in feature:
+                junction_counter[feature] += 1
+            else:
+                exon_counter[feature] += 1
 
 
-#####################################
-# determine dominant annotations
-#####################################
-
-top_gene = gene_counter.most_common(1)
-top_transcript = transcript_counter.most_common(1)
-top_feature = feature_counter.most_common(1)
+    if not gene_counter:
+        continue
 
 
-#####################################
-# write detailed output
-#####################################
+    ################################
+    # dominant gene
+    ################################
 
-with open(output_file, "w") as out:
+    max_gene = max(gene_counter.values())
+    top_genes = [g for g,c in gene_counter.items() if c == max_gene]
 
-    out.write("peptide\tgene\tfeature\ttranscripts\n")
 
-    for pep, gene, feature, transcripts in annotations:
+    ################################
+    # dominant transcript
+    ################################
 
-        out.write(
-            pep + "\t" +
-            gene + "\t" +
-            str(feature) + "\t" +
-            ",".join(transcripts) + "\n"
+    max_tr = max(transcript_counter.values())
+    top_transcripts = [t for t,c in transcript_counter.items() if c == max_tr]
+
+
+    ################################
+    # feature preference
+    ################################
+
+    if junction_counter:
+
+        max_feat = max(junction_counter.values())
+        top_features = [f for f,c in junction_counter.items() if c == max_feat]
+
+        feature_type = "junction"
+
+    else:
+
+        max_feat = max(exon_counter.values())
+        top_features = [f for f,c in exon_counter.items() if c == max_feat]
+
+        feature_type = "exon"
+
+
+    ################################
+    # store results
+    ################################
+
+    results.append(
+        (
+            exp_pep,
+            ";".join(sorted(map(str,top_genes))),
+            feature_type,
+            ";".join(sorted(map(str,top_features))),
+            ";".join(sorted(map(str,top_transcripts))),
+            max_gene
         )
+    )
 
 
 #####################################
-# print summary
+# write output
 #####################################
 
-print("\n===== SUMMARY =====")
+with open(output_file,"w") as out:
 
-if top_gene:
-    print("Top gene:", top_gene[0][0], "hits:", top_gene[0][1])
+    out.write("Experimental_MS_peptide\tGene_ids\tFeature_type\tFeatures\tTranscripts\tKmer_hits\n")
 
-if top_transcript:
-    print("Top transcript:", top_transcript[0][0], "hits:", top_transcript[0][1])
+    for r in results:
+        out.write("\t".join(map(str,r))+"\n")
 
-if top_feature:
-    print("Top feature:", top_feature[0][0], "hits:", top_feature[0][1])
+
+print("Annotated experimental peptides:",len(results))

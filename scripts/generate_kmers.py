@@ -3,26 +3,31 @@ import sys
 input_file = sys.argv[1]
 output_file = sys.argv[2]
 
+
 def generate_kmers(peptide, k=8):
-    return [peptide[i:i+k] for i in range(len(peptide)-k+1)]
+    return [peptide[i:i+k] for i in range(len(peptide) - k + 1)]
 
-kmers = set()
 
-with open(input_file) as f:
+total_kmers = 0
+
+with open(input_file) as f, open(output_file, "w") as out:
 
     for line in f:
 
         pep = line.strip()
 
+        if not pep:
+            continue
+
         if len(pep) < 8:
             continue
 
-        for kmer in generate_kmers(pep):
-            kmers.add(kmer)
+        # remove duplicate kmers within same peptide
+        kmers = set(generate_kmers(pep))
 
-with open(output_file,"w") as out:
+        for kmer in kmers:
+            out.write(f"{pep}\t{kmer}\n")
+            total_kmers += 1
 
-    for k in sorted(kmers):
-        out.write(k+"\n")
 
-print("Total kmers:", len(kmers))
+print("Total kmers:", total_kmers)
