@@ -37,17 +37,10 @@ data/peptide_dataset.pkl
 
 Clone the repository:
 
-
+```
 git clone https://github.com/deepanshicbg/PEXMap.git
-
 cd PEXMap
-
-
-Install dependencies:
-
-
-pip install -r requirements.txt
-
+```
 
 ---
 
