@@ -23,17 +23,19 @@ The peptide annotation database is large and therefore hosted externally.
 
 Download the database from:
 
-ENACT v0.5 dataset (used in this study):
+**ENACT v0.5 dataset (used in this study):**
+```
 https://drive.google.com/uc?id=1jPU8HE6Fcwk4mAU8Fk5m7VJGLtnrrKKF
-
-Latest dataset version (recommended):
+```
+**Latest dataset version (recommended):**
+```
 https://drive.google.com/file/d/124p7-jL0uxcfmfKGvxBqu2JAOXGH2GqM/view?usp=sharing
-
+```
 After downloading, place the file in:
 
-
+``
 data/peptide_dataset.pkl
-
+``
 
 ---
 
@@ -54,9 +56,9 @@ cd PEXMap
 
 This step filters peptides shorter than the selected k-mer length and generates overlapping k-mer fragments.
 
-
+```
 python scripts/generate_kmers.py input_peptides.txt kmers.txt
-
+```
 
 ---
 
@@ -64,13 +66,13 @@ python scripts/generate_kmers.py input_peptides.txt kmers.txt
 
 Search generated k-mers against the reference peptide database.
 
-
+```
 python scripts/annotate_peptides.py
 --kmers kmers.txt
 --database data/peptide_dataset.pkl
 --organism human
 --output annotations.tsv
-
+```
 
 ---
 
@@ -91,9 +93,9 @@ PEXMap also allows users to generate their own peptide annotation database from 
 
 If you have **ENACT-based transcript–exon annotation files** for an organism, you can generate the peptide database using the provided script:
 
-
+``
 scripts/build_peptide_database.py
-
+``
 
 This script reads gene-level annotation files containing:
 
@@ -130,20 +132,26 @@ python scripts/build_peptide_database.py
 
 Input peptide file should contain **one peptide sequence per line**:
 
-
+``
 MTEYKLVVVGAG
-ADLASRDE
-VAVWPTMV
+``
 
+``
+ADLASRDE
+``
+
+``
+VAVWPTMV
+``
 
 ---
 
 ## Example Run
 
 Example peptide input file:
-```
+``
 example/example_peptides.txt
-```
+``
 
 Generate k-mer fragments from the example peptides:
 
