@@ -23,7 +23,11 @@ The peptide annotation database is large and therefore hosted externally.
 
 Download the database from:
 
+ENACT v0.5 dataset (used in this study):
 https://drive.google.com/uc?id=1jPU8HE6Fcwk4mAU8Fk5m7VJGLtnrrKKF
+
+Latest dataset version (recommended):
+https://drive.google.com/file/d/124p7-jL0uxcfmfKGvxBqu2JAOXGH2GqM/view?usp=sharing
 
 After downloading, place the file in:
 
@@ -149,13 +153,13 @@ Generate k-mer fragments from the example peptides:
 
 Annotate the generated peptides:
 
-
+```
 python scripts/annotate_peptides.py
 --kmers example/example_kmers.txt
 --database data/peptide_dataset.pkl
 --organism human
 --output example/example_output.tsv
-
+```
 
 ---
 
