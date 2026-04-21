@@ -160,16 +160,16 @@ example/example_peptides.txt
 Generate k-mer fragments from the example peptides:
 
 ```
- python scripts/generate_kmers.py example/example_peptides.txt example/example_kmers.txt
+ python scripts/generate_kmers.py example/example_MSpeptides.txt example/example_kmers.txt
 ```
 
 Annotate the generated peptides:
 
 ```
-python scripts/annotate_peptides.py
---kmers example/example_kmers.txt
---database data/peptide_dataset.pkl
---organism human
+python scripts/annotate_peptides.py \
+--kmers example/example_kmers.txt \
+--database data/peptide_dataset.pkl \
+--organism human \
 --output example/example_output.tsv
 ```
 
