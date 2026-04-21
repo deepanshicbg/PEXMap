@@ -1,19 +1,23 @@
 # PEXMap – Peptide Exon Mapping Tool
 
-PEXMap is a proteogenomics tool designed to map experimental MS/MS–derived peptide sequences to their potential genomic origins. The tool uses a customized reference database of **k-mer peptides (default: 8-mers)** that links each peptide fragment to its corresponding **gene IDs**, **transcript IDs**, and **exon or exon-junction features**.
+PEXMap **(PeptideEXonMapper)** is an exon-aware proteogenomic framework developed to systematically map experimental **MS/MS-derived peptide sequences** to their genomic and transcriptomic origins. Unlike conventional peptide annotation methods that mainly assign peptides to genes or proteins, PEXMap enables **multi-level mapping** of peptides to **genes, transcript isoforms, exons, and exon–exon junctions**.
 
-The workflow processes experimentally identified peptides by generating overlapping **k-mer fragments**, which are then queried against the reference annotation database. Matching entries allow the identification of candidate genomic regions that may give rise to the observed peptide sequences, enabling downstream analysis of exon usage and exon-junction–derived peptides in proteogenomic studies.
+The method uses a customized searchable reference database built from human protein-coding transcript isoforms, where sequences are decomposed into overlapping **8-mer subsequences (octamerDB)**. Each 8-mer is indexed with its associated **gene ID, transcript/isoform ID, exon identifier (EUID), or exon-junction context**. A complementary **exon-junction database (ExonjunctionDB)** is also used to improve isoform-specific detection.
+
+For analysis, input MS/MS peptides are filtered (minimum length ≥8 amino acids, excluding low-complexity peptides) and similarly decomposed into overlapping 8-mers. These are matched exactly against the indexed reference databases using **fast dictionary-based lookup**. Peptide assignments are then inferred using maximal matching evidence, allowing reliable identification of shared or uniquely mapped peptides.
+
+PEXMap is particularly useful for detecting **isoform-specific peptide evidence**, resolving peptides originating from alternatively spliced exons, and identifying tissue- or disease-specific transcript usage directly from proteomics datasets.
 
 ---
 
 ## Workflow
 
-1. Provide experimentally identified peptide sequences.
-2. Filter peptides with length ≥ k (default **8 amino acids**).
-3. Generate overlapping **k-mer fragments** from the input peptides.
-4. Search generated k-mers in the **reference peptide annotation database**.
-5. Retrieve associated **gene, transcript, exon, or exon-junction annotations**.
-6. Summarize dominant gene or transcript matches based on peptide hits.
+1. Input experimentally identified **MS/MS peptide sequences**.
+2. Filter peptides (**≥8 aa**, remove **low-complexity** and **ambiguous sequences**).
+3. Generate overlapping **8-mer k-mers**.
+4. Query k-mers against the **precomputed**`` .pkl`` **annotation database**.
+5. Retrieve mapped **gene, transcript/isoform, exon, and exon–exon junction (EXj)** annotations.
+6. Assign peptides using a **maximum k-mer match strategy** to determine dominant mappings.
 
 ---
 
