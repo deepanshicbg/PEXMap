@@ -1,19 +1,23 @@
 # PEXMap – Peptide Exon Mapping Tool
 
-PEXMap is a proteogenomics tool designed to map experimental MS/MS–derived peptide sequences to their potential genomic origins. The tool uses a customized reference database of **k-mer peptides (default: 8-mers)** that links each peptide fragment to its corresponding **gene IDs**, **transcript IDs**, and **exon or exon-junction features**.
+PEXMap **(PeptideEXonMapper)** is an exon-aware proteogenomic framework developed to systematically map experimental **MS/MS-derived peptide sequences** to their genomic and transcriptomic origins. Unlike conventional peptide annotation methods that mainly assign peptides to genes or proteins, PEXMap enables **multi-level mapping** of peptides to **genes, transcript isoforms, exons, and exon–exon junctions**.
 
-The workflow processes experimentally identified peptides by generating overlapping **k-mer fragments**, which are then queried against the reference annotation database. Matching entries allow the identification of candidate genomic regions that may give rise to the observed peptide sequences, enabling downstream analysis of exon usage and exon-junction–derived peptides in proteogenomic studies.
+The method uses a customized searchable reference database built from human protein-coding transcript isoforms, where sequences are decomposed into overlapping **8-mer subsequences (octamerDB)**. Each 8-mer is indexed with its associated **gene ID, transcript/isoform ID, exon identifier (EUID), or exon-junction context**. A complementary **exon-junction database (ExonjunctionDB)** is also used to improve isoform-specific detection.
+
+For analysis, input MS/MS peptides are filtered (minimum length ≥8 amino acids, excluding low-complexity peptides) and similarly decomposed into overlapping 8-mers. These are matched exactly against the indexed reference databases using **fast dictionary-based lookup**. Peptide assignments are then inferred using maximal matching evidence, allowing reliable identification of shared or uniquely mapped peptides.
+
+PEXMap is particularly useful for detecting **isoform-specific peptide evidence**, resolving peptides originating from alternatively spliced exons, and identifying tissue- or disease-specific transcript usage directly from proteomics datasets.
 
 ---
 
 ## Workflow
 
-1. Provide experimentally identified peptide sequences.
-2. Filter peptides with length ≥ k (default **8 amino acids**).
-3. Generate overlapping **k-mer fragments** from the input peptides.
-4. Search generated k-mers in the **reference peptide annotation database**.
-5. Retrieve associated **gene, transcript, exon, or exon-junction annotations**.
-6. Summarize dominant gene or transcript matches based on peptide hits.
+1. Input experimentally identified **MS/MS peptide sequences**.
+2. Filter peptides (**≥8 aa**, remove **low-complexity** and **ambiguous sequences**).
+3. Generate overlapping **8-mer k-mers**.
+4. Query k-mers against the **precomputed**`` .pkl`` **annotation database**.
+5. Retrieve mapped **gene, transcript/isoform, exon, and exon–exon junction (EXj)** annotations.
+6. Assign peptides using a **maximum k-mer match strategy** to determine dominant mappings.
 
 ---
 
@@ -23,13 +27,19 @@ The peptide annotation database is large and therefore hosted externally.
 
 Download the database from:
 
+**ENACT v0.5 dataset (used in this study):**
+```
 https://drive.google.com/uc?id=1jPU8HE6Fcwk4mAU8Fk5m7VJGLtnrrKKF
-
+```
+**Latest dataset version (recommended):**
+```
+https://drive.google.com/file/d/124p7-jL0uxcfmfKGvxBqu2JAOXGH2GqM/view?usp=sharing
+```
 After downloading, place the file in:
 
-
+``
 data/peptide_dataset.pkl
-
+``
 
 ---
 
@@ -37,17 +47,10 @@ data/peptide_dataset.pkl
 
 Clone the repository:
 
-
+```
 git clone https://github.com/deepanshicbg/PEXMap.git
-
 cd PEXMap
-
-
-Install dependencies:
-
-
-pip install -r requirements.txt
-
+```
 
 ---
 
@@ -57,9 +60,9 @@ pip install -r requirements.txt
 
 This step filters peptides shorter than the selected k-mer length and generates overlapping k-mer fragments.
 
-
+```
 python scripts/generate_kmers.py input_peptides.txt kmers.txt
-
+```
 
 ---
 
@@ -67,13 +70,13 @@ python scripts/generate_kmers.py input_peptides.txt kmers.txt
 
 Search generated k-mers against the reference peptide database.
 
-
+```
 python scripts/annotate_peptides.py
 --kmers kmers.txt
 --database data/peptide_dataset.pkl
 --organism human
 --output annotations.tsv
-
+```
 
 ---
 
@@ -94,9 +97,9 @@ PEXMap also allows users to generate their own peptide annotation database from 
 
 If you have **ENACT-based transcript–exon annotation files** for an organism, you can generate the peptide database using the provided script:
 
-
+``
 scripts/build_peptide_database.py
-
+``
 
 This script reads gene-level annotation files containing:
 
@@ -133,20 +136,26 @@ python scripts/build_peptide_database.py
 
 Input peptide file should contain **one peptide sequence per line**:
 
-
+``
 MTEYKLVVVGAG
-ADLASRDE
-VAVWPTMV
+``
 
+``
+ADLASRDE
+``
+
+``
+VAVWPTMV
+``
 
 ---
 
 ## Example Run
 
 Example peptide input file:
-```
+``
 example/example_peptides.txt
-```
+``
 
 Generate k-mer fragments from the example peptides:
 
@@ -156,13 +165,13 @@ Generate k-mer fragments from the example peptides:
 
 Annotate the generated peptides:
 
-
+```
 python scripts/annotate_peptides.py
 --kmers example/example_kmers.txt
 --database data/peptide_dataset.pkl
 --organism human
 --output example/example_output.tsv
-
+```
 
 ---
 
@@ -215,4 +224,5 @@ If you use **PEXMap** in your research, please cite the associated publication (
 
 Deepanshi Awasthi, PhD Research Scholar, Computational Biology Group  
 Indian Institute of Science Education and Research (IISER) Mohali, India
+
 
