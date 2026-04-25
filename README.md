@@ -198,22 +198,36 @@ The annotation output reports peptide matches and associated genomic features.
 | Experimental_MS_peptide  | Input peptide sequence from MS/MS experiment                               |
 | Gene_id                  | Dominant gene selected based on maximum k-mer support                      |
 | Feature_type             | Type of feature: `exon` or `junction`                                      |
-| Features                 | Exon IDs or exon–junction identifiers associated with the peptide     |
+| Features                 | Exon IDs or exon–exon junction identifiers associated with the peptide     |
 | Transcripts              | Dominant transcript(s) belonging to the selected gene                      |
-| Kmer_hits                | Total number of k-mer matches supporting the selected gene                 |
 | Total_unique_kmers       | Number of unique k-mers derived from the peptide                           |
 | Matched_kmers            | Number of k-mers that matched entries in the reference database            |
 | Coverage_percent         | Percentage of peptide k-mers matched to the database                       |
 
 
+
 **Example Output**
 
-| Experimental_MS_peptide | Gene_id | Feature_type | Features                         | Transcripts                                                                 | Kmer_hits | Total_unique_kmers | Matched_kmers | Coverage_percent |
-|------------------------|---------|--------------|----------------------------------|------------------------------------------------------------------------------|-----------|--------------------|---------------|------------------|
-| LDGNYLKPPIPLDLMMCF     | 5549    | exon         | T.1.G.3.0.0                      | NP_002716.1;NP_958505.1                                                      | 11        | 11                 | 11            | 100.0            |
-| FIDKLALRAGNEKEEGETA    | 7150    | junction     | T.1.G.14.0.0,T.1.G.15.0.0        | NP_003277.1                                                                  | 12        | 12                 | 12            | 100.0            |
-| QSGQCLDIDECR           | 10516   | junction     | D.1.G.4.0.0,T.1.G.7.0.0          | NP_001371088.1;NP_001371089.1;NP_006320.2;XP_011534658.1                    | 8         | 5                  | 5             | 100.0            |
-| TKAIDMCPKNASY          | 7266    | junction     | D.1.G.4.0.0,T.1.G.5.0.0          | NP_003306.3                                                                  | 7         | 6                  | 6             | 100.0            |
+
+| Experimental_MS_peptide | Gene_id | Feature_type | Features                         | Transcripts                              | Total_unique_kmers | Matched_kmers | Coverage_percent |
+|------------------------|---------|--------------|----------------------------------|------------------------------------------|--------------------|---------------|------------------|
+| TKAIDMCPKNASY          | 7266    | junction     | D.1.G.4.0.0,T.1.G.5.0.0          | NP_003306.3                              | 6                  | 6             | 100.0            |
+| EEEDDSALPQEVSI         | 80829   | exon         | T.1.G.3.0.0                      | NP_001183980.1;NP_444251.1               | 7                  | 7             | 100.0            |
+| IGKAKTKENRQSIINPDWNFEKM| 474170  | junction     | T.1.A.7.0.0,T.1.A.8.0.0          | XP_047292103.1                           | 16                 | 16            | 100.0            |
+| SYAAQQHPQAAASY         | 10432   | exon         | T.1.A.2.0.0                      | NP_006319.1                              | 7                  | 7             | 100.0            |
+| GQSEADSDKNATILELR      | 1832    | exon         | T.1.F.23.0.0                     | NP_004406.2                              | 10                 | 8             | 80.0             |
+
+## Summary Statistics
+
+At the end of execution, PEXMap reports:
+
+- Number of peptides with **100% coverage**
+- Number of peptides with **≥80%, ≥50%, ≥30%, and <30% coverage**
+- Number of peptides mapped to:
+  - **exons**
+  - **exon–exon junctions**
+
+These metrics provide a quick assessment of mapping quality and splice-aware peptide evidence.
 ---
 
 ## Repository Structure

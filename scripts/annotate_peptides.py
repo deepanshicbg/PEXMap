@@ -83,6 +83,10 @@ cov_50 = 0
 cov_30 = 0
 cov_below_30 = 0
 
+# feature summary
+exon_peptides = 0
+junction_peptides = 0
+
 
 for exp_pep, kmers in pep_kmers.items():
 
@@ -175,11 +179,8 @@ for exp_pep, kmers in pep_kmers.items():
 
         # STRICT transcript filtering
         for tr in transcripts:
-
-            # keep only transcripts belonging to selected gene
             if selected_gene not in transcript_to_gene.get(tr, set()):
                 continue
-
             transcript_counter[tr] += 1
 
         # feature counting
@@ -209,10 +210,14 @@ for exp_pep, kmers in pep_kmers.items():
         max_feat = max(junction_counter.values())
         top_features = [f for f, c in junction_counter.items() if c == max_feat]
         feature_type = "junction"
+        junction_peptides += 1
+
     elif exon_counter:
         max_feat = max(exon_counter.values())
         top_features = [f for f, c in exon_counter.items() if c == max_feat]
         feature_type = "exon"
+        exon_peptides += 1
+
     else:
         top_features = []
         feature_type = "NA"
@@ -229,7 +234,6 @@ for exp_pep, kmers in pep_kmers.items():
             feature_type,
             ";".join(sorted(map(str, top_features))),
             ";".join(sorted(map(str, top_transcripts))),
-            max_gene,
             total_kmers,
             matched_kmers,
             round(coverage, 2)
@@ -244,7 +248,7 @@ for exp_pep, kmers in pep_kmers.items():
 with open(output_file, "w") as out:
 
     out.write(
-        "Experimental_MS_peptide\tGene_id\tFeature_type\tFeatures\tTranscripts\tKmer_hits\tTotal_unique_kmers\tMatched_kmers\tCoverage_percent\n"
+        "Experimental_MS_peptide\tGene_id\tFeature_type\tFeatures\tTranscripts\tTotal_unique_kmers\tMatched_kmers\tCoverage_percent\n"
     )
 
     for r in results:
@@ -261,10 +265,16 @@ print("\nCoverage Summary:")
 print("-------------------------")
 print(f"Total peptides processed: {total_peptides}")
 print(f"100% coverage: {cov_100}")
-print(f">=80% coverage: {cov_80}")
-print(f">=50% coverage: {cov_50}")
-print(f">=30% coverage: {cov_30}")
+print(f">=80% and <100% coverage: {cov_80}")
+print(f">=50% and <80% coverage: {cov_50}")
+print(f">=30% and <50% coverage: {cov_30}")
 print(f"<30% coverage: {cov_below_30}")
+print("-------------------------")
+
+print("\nFeature Mapping Summary:")
+print("-------------------------")
+print(f"Peptides mapped to exons: {exon_peptides}")
+print(f"Peptides mapped to junctions: {junction_peptides}")
 print("-------------------------")
 
 print("Annotated experimental peptides:", len(results))
