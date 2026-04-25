@@ -25,11 +25,11 @@ PEXMap is particularly useful for detecting **isoform-specific peptide evidence*
 
 ## 📊 Coverage Metric
 
-Coverage (%) = (Matched k-mers / Total unique k-mers) × 100
+Coverage (%) = (Matched MS peptide derived k-mers / Total unique MS peptide derived k-mers) × 100
 
 Where:
-- Total unique k-mers = unique 8-mers derived from peptide  
-- Matched k-mers = those found in the reference database  
+- Total unique MS peptide derived 8-mers = unique 8-mers derived from MS peptides  (Experimental MS/MS or query peptides)
+- Matched MS peptide derived 8-mers  = those found in the reference database (exon octamerDB + exonjunctionDB) 
 
 ---
 
@@ -208,12 +208,12 @@ The annotation output reports peptide matches and associated genomic features.
 
 ## 📌 Example Output
 
-| Experimental_MS_peptide | Gene_id | Feature_type | Features                         | Transcripts                         | Kmer_hits | Total_unique_kmers | Matched_kmers | Coverage_percent |
-|------------------------|---------|--------------|----------------------------------|-------------------------------------|-----------|--------------------|---------------|------------------|
-| AGSYGAQPVVQTQLNSYGAQA  | 10432   | exon         | T.1.A.2.0.0                      | NP_006319.1                         | 14        | 14                 | 14            | 100.0            |
-| NYEENRQVNL             | 1825    | exon         | T.1.G.10.0.0                     | NP_001932.2;NP_077741.2             | 3         | 3                  | 3             | 100.0            |
-| GALTGKQPDGSAE          | 9941    | junction     | T.1.A.1.n.2,D.1.A.3.0.0          | NP_005098.2;XP_005265692.1          | 5         | 6                  | 5             | 83.33            |
-
+| Experimental_MS_peptide | Gene_id | Feature_type | Features                         | Transcripts                                                                 | Kmer_hits | Total_unique_kmers | Matched_kmers | Coverage_percent |
+|------------------------|---------|--------------|----------------------------------|------------------------------------------------------------------------------|-----------|--------------------|---------------|------------------|
+| LDGNYLKPPIPLDLMMCF     | 5549    | exon         | T.1.G.3.0.0                      | NP_002716.1;NP_958505.1                                                      | 11        | 11                 | 11            | 100.0            |
+| FIDKLALRAGNEKEEGETA    | 7150    | junction     | T.1.G.14.0.0,T.1.G.15.0.0        | NP_003277.1                                                                  | 12        | 12                 | 12            | 100.0            |
+| QSGQCLDIDECR           | 10516   | junction     | D.1.G.4.0.0,T.1.G.7.0.0          | NP_001371088.1;NP_001371089.1;NP_006320.2;XP_011534658.1                    | 8         | 5                  | 5             | 100.0            |
+| TKAIDMCPKNASY          | 7266    | junction     | D.1.G.4.0.0,T.1.G.5.0.0          | NP_003306.3                                                                  | 7         | 6                  | 6             | 100.0            |
 ---
 
 ## Repository Structure

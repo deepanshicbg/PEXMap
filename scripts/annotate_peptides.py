@@ -35,8 +35,6 @@ print("Total 8-mer sequences in DB:", len(db))
 # build transcript -> gene mapping
 #####################################
 
-print("Building transcript → gene map...")
-
 transcript_to_gene = defaultdict(set)
 
 for kmer_entries in db.values():
