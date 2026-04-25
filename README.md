@@ -18,6 +18,18 @@ PEXMap is particularly useful for detecting **isoform-specific peptide evidence*
 4. Query k-mers against the **precomputed**`` .pkl`` **annotation database**.
 5. Retrieve mapped **gene, transcript/isoform, exon, and exon–exon junction (EXj)** annotations.
 6. Assign peptides using a **maximum k-mer match strategy** to determine dominant mappings.
+7. Compute **k-mer coverage statistics**
+
+---
+
+
+## 📊 Coverage Metric
+
+Coverage (%) = (Matched k-mers / Total unique k-mers) × 100
+
+Where:
+- Total unique k-mers = unique 8-mers derived from peptide  
+- Matched k-mers = those found in the reference database  
 
 ---
 
@@ -179,13 +191,28 @@ python scripts/annotate_peptides.py \
 
 The annotation output reports peptide matches and associated genomic features.
 
-Example output:
+## 📤 Output Columns
+
+| Column                     | Description                                                                 |
+|--------------------------|-----------------------------------------------------------------------------|
+| Experimental_MS_peptide  | Input peptide sequence from MS/MS experiment                               |
+| Gene_id                  | Dominant gene selected based on maximum k-mer support                      |
+| Feature_type             | Type of feature: `exon` or `junction`                                      |
+| Features                 | Exon IDs or exon–exon junction identifiers associated with the peptide     |
+| Transcripts              | Dominant transcript(s) belonging to the selected gene                      |
+| Kmer_hits                | Total number of k-mer matches supporting the selected gene                 |
+| Total_unique_kmers       | Number of unique k-mers derived from the peptide                           |
+| Matched_kmers            | Number of k-mers that matched entries in the reference database            |
+| Coverage_percent         | Percentage of peptide k-mers matched to the database                       |
 
 
-| Experimental_MS_peptide | Gene_ids | Feature_type  |         Features        | Transcripts | Kmer_hits |
-|-------------------------|----------|---------------|-------------------------|-------------|-----------|
-|       ADLASRDEK         |   92283  | Exon-junction | T.1.A.7.0.0,T.1.A.9.c.1 | NP_694989.2 |     18    |
-|     MGTFATLSELHCDK      |    3043  |     Exon      |       T.1.G.2.0.0       | NP_000509.1 |      6    |
+## 📌 Example Output
+
+| Experimental_MS_peptide | Gene_id | Feature_type | Features                         | Transcripts                         | Kmer_hits | Total_unique_kmers | Matched_kmers | Coverage_percent |
+|------------------------|---------|--------------|----------------------------------|-------------------------------------|-----------|--------------------|---------------|------------------|
+| AGSYGAQPVVQTQLNSYGAQA  | 10432   | exon         | T.1.A.2.0.0                      | NP_006319.1                         | 14        | 14                 | 14            | 100.0            |
+| NYEENRQVNL             | 1825    | exon         | T.1.G.10.0.0                     | NP_001932.2;NP_077741.2             | 3         | 3                  | 3             | 100.0            |
+| GALTGKQPDGSAE          | 9941    | junction     | T.1.A.1.n.2,D.1.A.3.0.0          | NP_005098.2;XP_005265692.1          | 5         | 6                  | 5             | 83.33            |
 
 ---
 
