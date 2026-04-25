@@ -217,6 +217,24 @@ The annotation output reports peptide matches and associated genomic features.
 | SYAAQQHPQAAASY         | 10432   | exon         | T.1.A.2.0.0                      | NP_006319.1                              | 7                  | 7             | 100.0            |
 | GQSEADSDKNATILELR      | 1832    | exon         | T.1.F.23.0.0                     | NP_004406.2                              | 10                 | 8             | 80.0             |
 
+### Interpretation
+
+- Peptides with **100% coverage** indicate that all possible k-mers are supported by the reference database, providing high-confidence mapping.
+
+- **GQSEADSDKNATILELR**  
+  → Shows **80% coverage**, meaning some k-mers are not found in the database.  
+  → This may indicate:
+    - partial sequence support  
+    - database incompleteness  
+    - biological variation (e.g., mutations or alternative splicing)
+
+- Junction peptides (e.g., *TKAIDMCPKNASY*, *IGKAKTKENRQSIINPDWNFEKM*) provide **splice-aware evidence**, supporting transcript-specific mapping.
+
+- Exon-mapped peptides may be:
+  - **unique** to a transcript  
+  - or **shared across multiple isoforms** of the same gene
+
+
 ## Summary Statistics
 
 At the end of execution, PEXMap reports:
