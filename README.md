@@ -191,7 +191,7 @@ python scripts/annotate_peptides.py \
 
 The annotation output reports peptide matches and associated genomic features.
 
-#Output Columns
+**Output Columns**
 
 | Column                     | Description                                                                 |
 |--------------------------|-----------------------------------------------------------------------------|
@@ -206,7 +206,7 @@ The annotation output reports peptide matches and associated genomic features.
 | Coverage_percent         | Percentage of peptide k-mers matched to the database                       |
 
 
-#Example Output
+**Example Output**
 
 | Experimental_MS_peptide | Gene_id | Feature_type | Features                         | Transcripts                                                                 | Kmer_hits | Total_unique_kmers | Matched_kmers | Coverage_percent |
 |------------------------|---------|--------------|----------------------------------|------------------------------------------------------------------------------|-----------|--------------------|---------------|------------------|
