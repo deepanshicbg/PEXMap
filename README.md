@@ -191,14 +191,14 @@ python scripts/annotate_peptides.py \
 
 The annotation output reports peptide matches and associated genomic features.
 
-## 📤 Output Columns
+#Output Columns
 
 | Column                     | Description                                                                 |
 |--------------------------|-----------------------------------------------------------------------------|
 | Experimental_MS_peptide  | Input peptide sequence from MS/MS experiment                               |
 | Gene_id                  | Dominant gene selected based on maximum k-mer support                      |
 | Feature_type             | Type of feature: `exon` or `junction`                                      |
-| Features                 | Exon IDs or exon–exon junction identifiers associated with the peptide     |
+| Features                 | Exon IDs or exon–junction identifiers associated with the peptide     |
 | Transcripts              | Dominant transcript(s) belonging to the selected gene                      |
 | Kmer_hits                | Total number of k-mer matches supporting the selected gene                 |
 | Total_unique_kmers       | Number of unique k-mers derived from the peptide                           |
@@ -206,7 +206,7 @@ The annotation output reports peptide matches and associated genomic features.
 | Coverage_percent         | Percentage of peptide k-mers matched to the database                       |
 
 
-## 📌 Example Output
+#Example Output
 
 | Experimental_MS_peptide | Gene_id | Feature_type | Features                         | Transcripts                                                                 | Kmer_hits | Total_unique_kmers | Matched_kmers | Coverage_percent |
 |------------------------|---------|--------------|----------------------------------|------------------------------------------------------------------------------|-----------|--------------------|---------------|------------------|
