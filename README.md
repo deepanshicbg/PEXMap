@@ -29,7 +29,7 @@ Coverage (%) = (Matched MS peptide derived k-mers / Total unique MS peptide deri
 
 Where:
 - Total unique MS peptide derived 8-mers = unique 8-mers derived from MS peptides  (Experimental MS/MS or query peptides)
-- Matched MS peptide derived 8-mers  = those found in the reference database (exon octamerDB + exonjunctionDB) 
+- Matched MS peptide derived 8-mers  = derived 8-mers that could match the 8-mers in reference database (exon octamerDB + exonjunctionDB) 
 
 ---
 ## Installation
