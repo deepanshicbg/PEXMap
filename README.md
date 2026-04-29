@@ -97,7 +97,7 @@ python scripts/annotate_tandemMS_peptides.py \
 | Argument     | Description                                |
 | ------------ | ------------------------------------------ |
 | `--kmers`    | File containing generated k-mer peptides   |
-| `--database` | Reference peptide annotation database      |
+| `--database` | Reference annotation database (octamerDB or kmerDB)      |
 | `--organism` | Organism name (e.g. human)                 |
 | `--output`   | Output file containing peptide annotations |
 
