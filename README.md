@@ -83,10 +83,10 @@ python scripts/generate_kmers.py --input input_peptides.txt --output kmers.txt -
 Search generated k-mers against the reference peptide database.
 
 ```
-python scripts/annotate_tandemMS_peptides.py
---kmers kmers.txt
---database data/octamerDB.pkl
---organism human
+python scripts/annotate_tandemMS_peptides.py \
+--kmers kmers.txt \
+--database data/octamerDB.pkl \
+--organism human \
 --output PEXMap_annotations.tsv
 ```
 
@@ -135,10 +135,10 @@ The resulting database can then be used directly with the **PEXMap annotation pi
 Example command:
 
 ```
-python scripts/build_peptide_database.py
---input_folder organism_gene_files
---kmer 8
---organism human
+python scripts/build_peptide_database.py \
+--input_folder organism_gene_files \
+--kmer 8 \
+--organism human \
 --output kmerDB.pkl
 ```
 
