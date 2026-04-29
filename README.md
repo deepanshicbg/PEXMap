@@ -2,7 +2,7 @@
 
 PEXMap **(PeptideEXonMapper)** is an exon-aware proteogenomic framework developed to systematically map experimental **MS/MS-derived peptide sequences** to their genomic and transcriptomic origins. Unlike conventional peptide annotation methods that mainly assign peptides to genes or proteins, PEXMap enables **multi-level mapping** of peptides to **genes, transcript isoforms, exons, and exon–exon junctions**.
 
-The method uses a customized searchable reference database built from human protein-coding transcript isoforms, where sequences are decomposed into overlapping **8-mer subsequences (octamerDB)**. Each 8-mer is indexed with its associated **gene ID, transcript/isoform ID, exon identifier (EUID), or exon-junction context**. A complementary **exon-junction database (ExonjunctionDB)** is also used to improve isoform-specific detection.
+The method uses a customized searchable reference database built from human protein-coding transcript isoforms, where sequences are decomposed into overlapping **8-mer subsequences (octamerDB)**. Each 8-mer is indexed with its associated **gene ID, transcript/isoform ID, exon identifier (EUID), or exon-exon junction context**. A complementary **exon-exon junction database (ExonjunctionDB)** is also used to improve isoform-specific detection.
 
 For analysis, input MS/MS peptides are filtered (minimum length ≥8 amino acids, excluding low-complexity peptides) and similarly decomposed into overlapping 8-mers. These are matched exactly against the indexed reference databases using **fast dictionary-based lookup**. Peptide assignments are then inferred using maximal matching evidence, allowing reliable identification of shared or uniquely mapped peptides.
 
@@ -32,29 +32,6 @@ Where:
 - Matched MS peptide derived 8-mers  = those found in the reference database (exon octamerDB + exonjunctionDB) 
 
 ---
-
-## Reference Dataset
-
-The peptide annotation database is large and therefore hosted externally.
-
-Download the database from:
-
-**ENACT v0.5 dataset (used in this study):**
-```
-https://drive.google.com/uc?id=1jPU8HE6Fcwk4mAU8Fk5m7VJGLtnrrKKF
-```
-**Latest dataset version (recommended):**
-```
-https://drive.google.com/file/d/124p7-jL0uxcfmfKGvxBqu2JAOXGH2GqM/view?usp=sharing
-```
-After downloading, place the file in:
-
-``
-data/peptide_dataset.pkl
-``
-
----
-
 ## Installation
 
 Clone the repository:
@@ -66,14 +43,37 @@ cd PEXMap
 
 ---
 
+
+## Reference Dataset
+
+The peptide annotation database is large and therefore hosted externally.
+
+Download the database from:
+
+**ENACT v0.5 dataset: octamerDB (used in this study):**
+```
+https://drive.google.com/uc?id=1jPU8HE6Fcwk4mAU8Fk5m7VJGLtnrrKKF
+```
+**Latest dataset version: octamerDB_latest (recommended):**
+```
+https://drive.google.com/file/d/124p7-jL0uxcfmfKGvxBqu2JAOXGH2GqM/view?usp=sharing
+```
+After downloading, create a 'data' directory in PEXMap folder and place the file there:
+
+``
+PEXMap/data/octamerDB.pkl
+``
+
+---
+
 ## Usage
 
 ### Step 1 — Generate k-mer peptides
 
-This step filters peptides shorter than the selected k-mer length and generates overlapping k-mer fragments.
+This step filters peptides shorter than the selected k-mer length and generates overlapping k-mer fragments. You can customize k-mer length as per your customized kmerDB. Here, the default length is 8. 
 
 ```
-python scripts/generate_kmers.py input_peptides.txt kmers.txt
+python scripts/generate_kmers.py --input input_peptides.txt --output kmers.txt --kmer_length 8
 ```
 
 ---
@@ -83,11 +83,11 @@ python scripts/generate_kmers.py input_peptides.txt kmers.txt
 Search generated k-mers against the reference peptide database.
 
 ```
-python scripts/annotate_peptides.py
+python scripts/annotate_tandemMS_peptides.py
 --kmers kmers.txt
---database data/peptide_dataset.pkl
+--database data/octamerDB.pkl
 --organism human
---output annotations.tsv
+--output PEXMap_annotations.tsv
 ```
 
 ---
@@ -124,7 +124,7 @@ and generates overlapping **k-mer peptides** indexed by:
 - gene ID  
 - transcript ID  
 - exon ID  
-- exon-junction ID  
+- exon- exon junction ID  
 
 The resulting database can then be used directly with the **PEXMap annotation pipeline**.
 
@@ -139,7 +139,7 @@ python scripts/build_peptide_database.py
 --input_folder organism_gene_files
 --kmer 8
 --organism human
---output peptide_dataset.pkl
+--output kmerDB.pkl
 ```
 
 ---
@@ -166,23 +166,23 @@ VAVWPTMV
 
 Example peptide input file:
 ``
-example/example_peptides.txt
+example/example_tandem_MSpeptides.txt
 ``
 
 Generate k-mer fragments from the example peptides:
 
 ```
- python scripts/generate_kmers.py example/example_MSpeptides.txt example/example_kmers.txt
+ python scripts/generate_kmers.py example/example_tandem_MSpeptides.txt example/example_kmers.txt
 ```
 
 Annotate the generated peptides:
 
 ```
-python scripts/annotate_peptides.py \
+python scripts/annotate_tandemMS_peptides.py \
 --kmers example/example_kmers.txt \
---database data/peptide_dataset.pkl \
+--database data/octamerDB.pkl \
 --organism human \
---output example/example_output.tsv
+--output example/example_PEXMap_annotations.tsv
 ```
 
 ---
@@ -195,14 +195,14 @@ The annotation output reports peptide matches and associated genomic features.
 
 | Column                     | Description                                                                 |
 |--------------------------|-----------------------------------------------------------------------------|
-| Experimental_MS_peptide  | Input peptide sequence from MS/MS experiment                               |
-| Gene_id                  | Dominant gene selected based on maximum k-mer support                      |
+| Experimental_MS_peptide  | Input peptide sequence from MS/MS experimental data                               |
+| Gene_id                  | Gene ID selected based on maximum k-mer support for mapped MS/MS peptide   |
 | Feature_type             | Type of feature: `exon` or `junction`                                      |
 | Features                 | Exon IDs or exon–exon junction identifiers associated with the peptide     |
-| Transcripts              | Dominant transcript(s) belonging to the selected gene                      |
-| Total_unique_kmers       | Number of unique k-mers derived from the peptide                           |
-| Matched_kmers            | Number of k-mers that matched entries in the reference database            |
-| Coverage_percent         | Percentage of peptide k-mers matched to the database                       |
+| Transcripts              | Maximally matched (highest k-mer hits) transcript(s) belonging to the selected gene |
+| Total_unique_kmers       | Number of unique k-mers derived from the MS/MS peptide                           |
+| Matched_kmers            | Number of k-mers that matched entries in the reference database (OctamerDB or kmerDB)   |
+| Coverage_percent         | Percentage of MS/MS peptide derived k-mers matched to the database                       |
 
 
 
@@ -255,16 +255,16 @@ PEXMap
 │
 ├── scripts
 │ ├── generate_kmers.py
-│ ├── annotate_peptides.py
-│ └── build_peptide_database.py
+│ ├── annotate_tandemMS_peptides.py
+│ └── build_kmer_database.py
 │
 ├── data
 │ └── (place peptide_dataset.pkl here)
 │
 ├── example
-│ ├── example_peptides.txt
+│ ├── example_tandem_MSpeptides.txt
 │ ├── example_kmers.txt
-│ └── example_output.tsv
+│ └── example_PEXMap_annotations.tsv
 │
 ├── README.md
 ├── requirements.txt

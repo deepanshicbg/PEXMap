@@ -1,10 +1,18 @@
-import sys
-
-input_file = sys.argv[1]
-output_file = sys.argv[2]
+import argparse
 
 
-def generate_kmers(peptide, k=8):
+parser = argparse.ArgumentParser(description="Build peptide annotation database")
+parser.add_argument("--input", required=True)
+parser.add_argument("--output", required=True)
+parser.add_argument("--kmer_length", type=int, default=8)
+
+args = parser.parse_args()
+k = args.kmer
+output_file = args.output
+input_file = args.input
+
+
+def generate_kmers(peptide, k):
     return [peptide[i:i+k] for i in range(len(peptide) - k + 1)]
 
 
@@ -22,7 +30,7 @@ with open(input_file) as f, open(output_file, "w") as out:
         if len(pep) < 8:
             continue
 
-        # remove duplicate kmers within same peptide
+        # Removes duplicate k-mers within same peptide
         kmers = set(generate_kmers(pep))
 
         for kmer in kmers:
@@ -30,4 +38,4 @@ with open(input_file) as f, open(output_file, "w") as out:
             total_kmers += 1
 
 
-print("Total kmers:", total_kmers)
+print("Total unique k-mers:", total_kmers)

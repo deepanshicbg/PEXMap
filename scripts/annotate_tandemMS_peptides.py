@@ -4,13 +4,13 @@ from collections import defaultdict, Counter
 
 
 parser = argparse.ArgumentParser(
-    description="Annotate peptides using k-mers (STRICT gene + transcript consistency + coverage stats)"
+    description="PEXMAp annotations of MS/MS peptides"
 )
 
-parser.add_argument("--kmers", required=True)
-parser.add_argument("--database", required=True)
-parser.add_argument("--organism", required=False)
-parser.add_argument("--output", required=True)
+parser.add_argument("--kmers", required=True) # specify k-mer file generated from MS/MS peptide dataset
+parser.add_argument("--database", required=True) # specify octamerDB.pkl or your customized k-mer DB
+parser.add_argument("--organism", required=False) # optional: We have used human here
+parser.add_argument("--output", required=True) # specify the output file name
 
 args = parser.parse_args()
 
@@ -19,21 +19,21 @@ db_file = args.database
 output_file = args.output
 
 
-#####################################
-# load database
-#####################################
+####################################################################
+# load database (octamerDB.pkl); downloaded from the link provided #
+####################################################################
 
 print("Loading database:", db_file)
 
 with open(db_file, "rb") as f:
     db = pickle.load(f)
 
-print("Total 8-mer sequences in DB:", len(db))
+print("Total 8-mer sequences in octamerDB:", len(db))
 
 
-#####################################
-# build transcript -> gene mapping
-#####################################
+####################################
+# Build transcript -> gene mapping #
+####################################
 
 transcript_to_gene = defaultdict(set)
 
@@ -52,9 +52,9 @@ for kmer_entries in db.values():
 print("Total transcripts mapped:", len(transcript_to_gene))
 
 
-#####################################
-# store kmers per peptide
-#####################################
+############################
+# Store 8-mers per peptide #
+###########################
 
 pep_kmers = defaultdict(list)
 
@@ -70,20 +70,21 @@ with open(kmer_file) as f:
         pep_kmers[exp_pep].append(kmer)
 
 
-#####################################
-# annotation
-#####################################
+######################
+# PEXMap annotations #
+######################
 
 results = []
 
-# coverage buckets
+# Mapping coverage (Number of MS/MS peptide derived unique 8-mers matched / Total number of MS/MS peptide derived unique 8-mers)
 cov_100 = 0
 cov_80 = 0
 cov_50 = 0
 cov_30 = 0
 cov_below_30 = 0
 
-# feature summary
+
+#For exon-level peptide mapping summary
 exon_peptides = 0
 junction_peptides = 0
 
@@ -99,9 +100,9 @@ for exp_pep, kmers in pep_kmers.items():
     all_entries = []
 
 
-    ################################
-    # match kmers
-    ################################
+    ###############
+    # Match kmers #
+    ###############
 
     for kmer in unique_kmers:
 
@@ -128,9 +129,9 @@ for exp_pep, kmers in pep_kmers.items():
     coverage = (matched_kmers / total_kmers * 100) if total_kmers > 0 else 0.0
 
 
-    ################################
-    # coverage binning
-    ################################
+    ####################
+    # Coverage binning #
+    ####################
 
     if coverage == 100:
         cov_100 += 1
@@ -148,18 +149,18 @@ for exp_pep, kmers in pep_kmers.items():
         continue
 
 
-    ################################
-    # dominant gene
-    ################################
+    ####################################################
+    # Select gene ID (Maximal 8-mer matching criteria) #
+    ####################################################
 
     max_gene = max(gene_counter.values())
     top_genes = [g for g, c in gene_counter.items() if c == max_gene]
     selected_gene = sorted(top_genes)[0]
 
 
-    ################################
-    # filter entries for selected gene
-    ################################
+    ####################################
+    # Filter entries for selected gene #
+    ####################################
 
     filtered_entries = [e for e in all_entries if e[0] == selected_gene]
 
@@ -167,9 +168,9 @@ for exp_pep, kmers in pep_kmers.items():
         continue
 
 
-    ################################
-    # recompute transcript + feature (STRICT)
-    ################################
+    ############################################
+    # Annotations at transcript and exon-level #
+    ############################################
 
     transcript_counter = Counter()
     junction_counter = Counter()
@@ -179,8 +180,11 @@ for exp_pep, kmers in pep_kmers.items():
 
         # STRICT transcript filtering
         for tr in transcripts:
+
+            # keep only transcripts belonging to selected gene
             if selected_gene not in transcript_to_gene.get(tr, set()):
                 continue
+
             transcript_counter[tr] += 1
 
         # feature counting
@@ -191,9 +195,9 @@ for exp_pep, kmers in pep_kmers.items():
                 exon_counter[feature] += 1
 
 
-    ################################
-    # dominant transcript
-    ################################
+    ######################################
+    # Transcript with maximum 8-mer hits #
+    ######################################
 
     if transcript_counter:
         max_tr = max(transcript_counter.values())
@@ -202,9 +206,9 @@ for exp_pep, kmers in pep_kmers.items():
         top_transcripts = []
 
 
-    ################################
-    # feature selection
-    ################################
+    ############################
+    # Exonic-feature selection #
+    ############################
 
     if junction_counter:
         max_feat = max(junction_counter.values())
@@ -223,9 +227,9 @@ for exp_pep, kmers in pep_kmers.items():
         feature_type = "NA"
 
 
-    ################################
-    # store result
-    ################################
+    ###########################
+    # Save PEXMap annotations #
+    ###########################
 
     results.append(
         (
@@ -234,6 +238,7 @@ for exp_pep, kmers in pep_kmers.items():
             feature_type,
             ";".join(sorted(map(str, top_features))),
             ";".join(sorted(map(str, top_transcripts))),
+            max_gene,
             total_kmers,
             matched_kmers,
             round(coverage, 2)
@@ -241,34 +246,34 @@ for exp_pep, kmers in pep_kmers.items():
     )
 
 
-#####################################
-# write output
-#####################################
+######################################
+# Write results into the output file # 
+######################################
 
 with open(output_file, "w") as out:
 
     out.write(
-        "Experimental_MS_peptide\tGene_id\tFeature_type\tFeatures\tTranscripts\tTotal_unique_kmers\tMatched_kmers\tCoverage_percent\n"
+        "Experimental_MS_peptide\tGene_id\tFeature_type\tFeatures\tTranscripts\tKmer_hits\tTotal_unique_kmers\tMatched_kmers\tCoverage_percent\n"
     )
 
     for r in results:
         out.write("\t".join(map(str, r)) + "\n")
 
 
-#####################################
-# summary stats
-#####################################
+######################
+# Summary statistics #
+######################
 
 total_peptides = len(pep_kmers)
 
 print("\nCoverage Summary:")
 print("-------------------------")
 print(f"Total peptides processed: {total_peptides}")
-print(f"100% coverage: {cov_100}")
-print(f">=80% and <100% coverage: {cov_80}")
-print(f">=50% and <80% coverage: {cov_50}")
-print(f">=30% and <50% coverage: {cov_30}")
-print(f"<30% coverage: {cov_below_30}")
+print(f"Coverage = 100% : {cov_100}")
+print(f"100% > Coverage > = 80% : {cov_80}")
+print(f"80% > Coverage > = 50% : {cov_50}")
+print(f"50% > Coverage > = 30% : {cov_30}")
+print(f"coverage < 30% : {cov_below_30}")
 print("-------------------------")
 
 print("\nFeature Mapping Summary:")
@@ -276,5 +281,6 @@ print("-------------------------")
 print(f"Peptides mapped to exons: {exon_peptides}")
 print(f"Peptides mapped to junctions: {junction_peptides}")
 print("-------------------------")
+
 
 print("Annotated experimental peptides:", len(results))

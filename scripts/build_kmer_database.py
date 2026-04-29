@@ -9,7 +9,7 @@ parser = argparse.ArgumentParser(description="Build peptide annotation database"
 parser.add_argument("--input_folder", required=True)
 parser.add_argument("--kmer", type=int, default=8)
 parser.add_argument("--organism", required=True)
-parser.add_argument("--output", default="peptide_dataset.pkl")
+parser.add_argument("--output", default="kmerDB.pkl") #This will be your customized k-mer DB
 
 args = parser.parse_args()
 
@@ -19,9 +19,7 @@ organism = args.organism
 output_file = args.output
 
 
-########################################
-# helper
-########################################
+#You can define length of k-mer sequences you want (here we used k=8)
 
 def kmers(seq, k):
     L = len(seq)
@@ -29,17 +27,14 @@ def kmers(seq, k):
         yield seq[i:i+k]
 
 
-########################################
-# main storage
-########################################
 
 # peptide -> (gene,feature_type,feature_id) -> transcripts
 peptide_db = defaultdict(lambda: defaultdict(set))
 
 
-########################################
-# parse gene files
-########################################
+####################
+# Parse gene files #
+####################
 
 gene_files = os.listdir(input_folder)
 
@@ -57,16 +52,13 @@ for gene_file in gene_files:
     with open(path) as f:
 
         for line in f:
-
             line = line.strip()
-
             if not line:
                 continue
 
-
-            ################################
-            # transcript line
-            ################################
+            ###################
+            # Transcript line #
+            ###################
 
             if line.startswith("#Transcript:"):
 
@@ -77,10 +69,9 @@ for gene_file in gene_files:
 
                 continue
 
-
-            ################################
-            # exon line
-            ################################
+            #############
+            # Exon line #
+            #############
 
             parts = line.split("\t")
 
@@ -93,10 +84,9 @@ for gene_file in gene_files:
             if not seq:
                 continue
 
-
-            ################################
-            # exon kmers
-            ################################
+            #################
+            # Exonic k-mers #
+            #################
 
             key_exon = (gene_id, "exon", exon_id)
 
@@ -104,9 +94,9 @@ for gene_file in gene_files:
                 peptide_db[pep][key_exon].add(transcript)
 
 
-            ################################
-            # junction kmers
-            ################################
+            #############################
+            # Exon-exon junction k-mers #
+            #############################
 
             if prev_seq is not None:
 
@@ -125,9 +115,9 @@ for gene_file in gene_files:
             prev_exon = exon_id
 
 
-########################################
-# convert structure
-########################################
+##############################
+# Convert database structure #
+##############################
 
 print("Converting database structure...")
 
@@ -150,9 +140,9 @@ for pep, groups in peptide_db.items():
     final_db[pep] = entries
 
 
-########################################
-# save pickle
-########################################
+############################
+# Save it as pickle object #
+############################
 
 print("Saving database...")
 
