@@ -31,7 +31,7 @@ with open(input_file) as f, open(output_file, "w") as out:
             continue
 
         # Removes duplicate k-mers within same peptide
-        kmers = set(generate_kmers(pep))
+        kmers = set(generate_kmers(pep,k))
 
         for kmer in kmers:
             out.write(f"{pep}\t{kmer}\n")
