@@ -66,8 +66,6 @@ PEXMap/data/octamerDB.pkl
 
 ---
 
----
-
 ## Input Format for the MS/MS peptide data (input_peptides.txt)
 
 Input peptide file should contain **one peptide sequence per line**:
