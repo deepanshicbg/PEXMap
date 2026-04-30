@@ -23,13 +23,13 @@ PEXMap is particularly useful for detecting **isoform-specific peptide evidence*
 ---
 
 
-## 📊 Coverage Metric
+## 📊 MS/MS peptide coverage metric
 
-Coverage (%) = (Matched MS peptide derived k-mers / Total unique MS peptide derived k-mers) × 100
+**Coverage (%)** = (Matched MS/MS peptide derived k-mers / Total unique MS/MS peptide derived k-mers) × 100
 
 Where:
-- Total unique MS peptide derived 8-mers = unique 8-mers derived from MS peptides  (Experimental MS/MS or query peptides)
-- Matched MS peptide derived 8-mers  = derived 8-mers that could match the 8-mers in reference database (exon octamerDB + exonjunctionDB) 
+- **Total unique MS/MS peptide derived k-mers** = Number of unique MS/MS peptide derived k-mers  
+- **Matched MS/MS peptide derived k-mers**  = Number of unique MS/MS peptide derived k-mers that could match the k-mers in the reference database (In our case, k=8, Reference database is: octamerDB) 
 
 ---
 ## Installation
@@ -125,7 +125,7 @@ python scripts/annotate_tandemMS_peptides.py \
 
 PEXMap also allows users to generate their own peptide annotation database from organism annotation data.
 
-If you have **ENACT-based transcript–exon annotation files** for an organism, you can generate the peptide database using the provided script:
+If you have **ENACT-based transcript–exon annotation files** for an organism, then you can generate the peptide database using the provided script:
 
 ``
 scripts/build_peptide_database.py
@@ -148,7 +148,7 @@ The resulting database can then be used directly with the **PEXMap annotation pi
 
 ---
 
-## Generate Database from ENACT Annotation Data
+## Generate Database from ENACTDB Annotated Genomes 
 
 Example command:
 
@@ -159,7 +159,6 @@ python scripts/build_peptide_database.py \
 --organism human \
 --output kmerDB.pkl
 ```
-
 
 
 ## Example Run
@@ -197,12 +196,12 @@ The annotation output reports peptide matches and associated genomic features.
 |--------------------------|-----------------------------------------------------------------------------|
 | Experimental_MS_peptide  | Input peptide sequence from MS/MS experimental data                               |
 | Gene_id                  | Gene ID selected based on maximum k-mer support for mapped MS/MS peptide   |
-| Feature_type             | Type of feature: `exon` or `junction`                                      |
+| Feature_type             | Type of feature: `exon` or `junction`; where `junction` is exon-exon junction                                      |
 | Features                 | Exon IDs or exon–exon junction identifiers associated with the peptide     |
 | Transcripts              | Maximally matched (highest k-mer hits) transcript(s) belonging to the selected gene |
 | Total_unique_kmers       | Number of unique k-mers derived from the MS/MS peptide                           |
 | Matched_kmers            | Number of k-mers that matched entries in the reference database (OctamerDB or kmerDB)   |
-| Coverage_percent         | Percentage of MS/MS peptide derived k-mers matched to the database                       |
+| Coverage_percent         | Percentage of MS/MS peptide derived k-mers matched to the reference database (k-mer hit percentage)                       |
 
 
 
