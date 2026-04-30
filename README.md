@@ -32,6 +32,11 @@ Where:
 - **Matched MS/MS peptide derived k-mers**  = Number of unique MS/MS peptide derived k-mers that could match the k-mers in the reference database (In our case, k=8, Reference database is: octamerDB) 
 
 ---
+## Prerequisites
+
+This tool requires Python 3 (version 3.8 or higher recommended). Ensure that Python is installed and accessible from the command line.
+
+---
 ## Installation
 
 Clone the repository:
