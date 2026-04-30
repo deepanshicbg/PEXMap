@@ -7,7 +7,7 @@ parser.add_argument("--output", required=True)
 parser.add_argument("--kmer_length", type=int, default=8)
 
 args = parser.parse_args()
-k = args.kmer
+k = args.kmer_length
 output_file = args.output
 input_file = args.input
 
