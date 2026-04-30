@@ -66,7 +66,27 @@ PEXMap/data/octamerDB.pkl
 
 ---
 
-## Usage
+---
+
+## Input Format for the MS/MS peptide data (input_peptides.txt)
+
+Input peptide file should contain **one peptide sequence per line**:
+
+``
+MTEYKLVVVGAG
+``
+
+``
+ADLASRDE
+``
+
+``
+VAVWPTMV
+``
+
+---
+
+## Steps to annotate your MS/MS peptide data using PEXMap:
 
 ### Step 1 — Generate k-mer peptides
 
@@ -142,25 +162,7 @@ python scripts/build_peptide_database.py \
 --output kmerDB.pkl
 ```
 
----
 
-## Input Format
-
-Input peptide file should contain **one peptide sequence per line**:
-
-``
-MTEYKLVVVGAG
-``
-
-``
-ADLASRDE
-``
-
-``
-VAVWPTMV
-``
-
----
 
 ## Example Run
 
