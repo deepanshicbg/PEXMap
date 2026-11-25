@@ -14,6 +14,11 @@ parser = argparse.ArgumentParser(
 parser.add_argument("--annotations", required=True, help="output TSV from annotate_peptides.py")
 parser.add_argument("--sequences", required=True, help="transcript sequence pickle from extract_sequences.py")
 parser.add_argument("--output", required=True, help="annotated TSV with an added Exact_match column")
+parser.add_argument(
+    "--drop_failed", action="store_true",
+    help="leave assignments that fail the exact-substring check (FAIL) out of --output "
+         "(by default they are kept and flagged FAIL)"
+)
 args = parser.parse_args()
 
 with open(args.sequences, "rb") as f:
@@ -58,7 +63,8 @@ with open(args.annotations) as f, open(args.output, "w") as out:
             out.write(line.rstrip("\n") + "\tPASS\n")
         else:
             failed += 1
-            out.write(line.rstrip("\n") + "\tFAIL\n")
+            if not args.drop_failed:
+                out.write(line.rstrip("\n") + "\tFAIL\n")
 
 print("Total annotated peptides:", total)
 if total == 0:
@@ -67,3 +73,5 @@ print(f"  Exact-substring verified (PASS): {verified} ({verified/total*100:.1f}%
 print(f"  Failed verification (FAIL, false-positive mode): {failed} ({failed/total*100:.1f}%)")
 print(f"  Skipped (multi_gene / NA / no transcript call): {skipped_ambiguous}")
 print(f"  Assigned transcript missing from sequence reference: {no_transcript}")
+if args.drop_failed:
+    print(f"  FAIL rows removed from {args.output} (--drop_failed): {failed}")
