@@ -1,0 +1,14 @@
+metric	value
+total_distinct_accessions	130739
+accessions_curated	63740
+accessions_curated_pct	48.75
+accessions_predicted	66999
+accessions_predicted_pct	51.25
+accessions_other_unrecognized	0
+accessions_other_unrecognized_pct	0.00
+kmers_total_peptides	1000
+kmers_unmatched	0
+kmers_involves_predicted	576
+kmers_involves_predicted_pct	57.60
+kmers_involves_only_predicted	0
+kmers_involves_only_curated	424

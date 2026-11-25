@@ -1,3 +1,39 @@
-data/
-*.pkl
+# PEXMap .gitignore -- allow-list style.
+# Everything is ignored by default; only the files listed below are published.
+# (The working folder also holds large databases, raw data, slides and draft
+# documents that must never be pushed to GitHub.)
 
+/*
+
+# --- top-level files to publish ---
+!/.gitignore
+!/README.md
+!/LICENSE
+!/requirements.txt
+
+# --- example data ---
+!/example/
+
+# --- benchmark summaries ---
+!/results/
+/results/*
+!/results/k_sensitivity_summary.txt
+!/results/npxp_results.tsv
+
+# --- PEXMap scripts ---
+!/scripts/
+/scripts/*
+!/scripts/generate_kmers.py
+!/scripts/annotate_peptides.py
+!/scripts/build_database.py
+!/scripts/extract_sequences.py
+!/scripts/verify_mapping.py
+!/scripts/substring_search.py
+!/scripts/simulate_peptides.py
+!/scripts/npxp_split.py
+
+# --- never publish, even inside allowed folders ---
+*.pkl
+*.zip
+__pycache__/
+.DS_Store
