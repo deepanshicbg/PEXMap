@@ -18,7 +18,7 @@
 !/results/
 /results/*
 !/results/k_sensitivity_summary.txt
-!/results/npxp_results.tsv
+!/results/reference_composition.tsv
 
 # --- PEXMap scripts ---
 !/scripts/
@@ -30,7 +30,7 @@
 !/scripts/verify_mapping.py
 !/scripts/substring_search.py
 !/scripts/simulate_peptides.py
-!/scripts/npxp_split.py
+!/scripts/reference_composition.py
 
 # --- never publish, even inside allowed folders ---
 *.pkl

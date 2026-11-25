@@ -6,8 +6,6 @@ Conventional tools usually stop at the gene or protein level. PEXMap adds an exo
 
 **How it works, in one paragraph:** every protein-coding isoform in the reference is cut into overlapping 8-amino-acid fragments (8-mers), both within exons and across exon–exon junctions, and each 8-mer is indexed with its gene, transcript and exon/junction. Your peptides are cut into 8-mers in the same way and looked up in this index. Each peptide is assigned to the gene, transcripts and exon/junction with the most distinct matching 8-mers. A final check then confirms that the whole peptide really occurs, uninterrupted, in the assigned isoform.
 
-> **Note on file names (v1.1):** the scripts were renamed to shorter names in v1.1. If you are following an older description: `annotate_tandemMS_peptides.py` → `annotate_peptides.py`, `build_kmer_database.py` → `build_database.py`, `extract_transcript_sequences.py` → `extract_sequences.py`, `verify_exact_substring.py` → `verify_mapping.py`, `exact_substring_baseline.py` → `substring_search.py`, `generate_synthetic_peptides.py` → `simulate_peptides.py`. The code is otherwise unchanged by the renaming.
-
 ---
 
 ## Contents
@@ -344,12 +342,12 @@ These scripts reproduce the benchmarks reported in the manuscript. They are not 
 | ------ | ------- |
 | `substring_search.py` | maps peptides by direct exact substring search of every transcript sequence (no k-mers), as a reference method for accuracy and runtime comparison |
 | `simulate_peptides.py` | creates synthetic tryptic peptides of known origin from the reference sequences, to measure gene- and transcript-level precision |
-| `npxp_split.py` | reports what fraction of the database comes from curated RefSeq entries (`NP_`) versus computationally predicted models (`XP_`), and how many peptides involve predicted models |
+| `reference_composition.py` | reports what fraction of the database comes from curated RefSeq entries (`NP_`) versus computationally predicted models (`XP_`), and how many peptides involve predicted models |
 
 Results included in `results/`:
 
 - `k_sensitivity_summary.txt`: database size, coverage, feature calls and Step 3 failure rate for k = 6–12.
-- `npxp_results.tsv`: curated vs predicted accessions in the database and their involvement in the example peptides.
+- `reference_composition.tsv`: curated vs predicted accessions in the database and their involvement in the example peptides.
 
 ---
 
@@ -358,7 +356,7 @@ Results included in `results/`:
 Please keep these in mind when interpreting PEXMap results:
 
 - **Annotated features only.** PEXMap can only report exons and junctions that exist in its reference. It does not discover novel exons, junctions or variant peptides; a peptide from an unannotated junction will be unmapped or mapped to the closest annotated feature.
-- **Predicted models in the reference.** The reference includes computationally predicted RefSeq models (`XP_`) as well as curated ones (`NP_`). A peptide specific to one curated isoform can appear shared because a predicted model contains the same sequence (see `npxp_split.py`).
+- **Predicted models in the reference.** The reference includes computationally predicted RefSeq models (`XP_`) as well as curated ones (`NP_`). A peptide specific to one curated isoform can appear shared because a predicted model contains the same sequence (see `reference_composition.py`).
 - **Isoleucine and leucine are treated as different amino acids**, although mass spectrometry generally cannot tell them apart. Claims that a peptide is unique to one exon or isoform should take this into account.
 - **No modifications.** Post-translational modifications and N-terminal methionine removal are not modelled; input peptides must be plain sequences.
 - **Very short exons.** Junction k-mers are built only between consecutive exons. Where an internal exon is shorter than k − 1 residues (≤ 6 aa for k = 8), k-mers spanning three exons are not built.
@@ -398,22 +396,22 @@ Runtime is dominated by loading the ~1 GB database into memory; the lookup itsel
 ```
 PEXMap
 ├── scripts
-│   ├── generate_kmers.py        # Step 1: peptides -> k-mers
-│   ├── annotate_peptides.py     # Step 2: k-mer annotation and QC summary
-│   ├── extract_sequences.py     # builds transcript sequences for Step 3
-│   ├── verify_mapping.py        # Step 3: exact-substring verification
-│   ├── build_database.py        # build your own k-mer database
-│   ├── substring_search.py      # benchmark: direct exact substring search
-│   ├── simulate_peptides.py     # benchmark: synthetic peptides of known origin
-│   └── npxp_split.py            # curated (NP_) vs predicted (XP_) composition
+│   ├── generate_kmers.py             # Step 1: peptides -> k-mers
+│   ├── annotate_peptides.py          # Step 2: k-mer annotation and QC summary
+│   ├── extract_sequences.py          # builds transcript sequences for Step 3
+│   ├── verify_mapping.py             # Step 3: exact-substring verification
+│   ├── build_database.py             # build your own k-mer database
+│   ├── substring_search.py           # benchmark: direct exact substring search
+│   ├── simulate_peptides.py          # benchmark: synthetic peptides of known origin
+│   └── reference_composition.py      # curated (NP_) vs predicted (XP_) composition
 ├── example
 │   ├── example_tandem_MSpeptides.txt
 │   ├── example_kmers.txt
 │   └── example_output.tsv
 ├── results
 │   ├── k_sensitivity_summary.txt
-│   └── npxp_results.tsv
-├── data                         # not in the repository; put octamerDB.pkl here
+│   └── reference_composition.tsv
+├── data                              # not in the repository; put octamerDB.pkl here
 ├── README.md
 ├── requirements.txt
 ├── LICENSE

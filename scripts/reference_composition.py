@@ -5,10 +5,10 @@ vs. computationally predicted (XP_/XM_) RefSeq accessions, and how many
 example peptides receive an assignment involving at least one predicted model.
 
 Usage:
-    python3 scripts/npxp_split.py \
+    python3 scripts/reference_composition.py \
         --database data/octamerDB_latest.pkl \
         --kmers example/example_kmers.txt \
-        --output results/npxp_results.tsv
+        --output results/reference_composition.tsv
 
 Notes:
 - This only reads octamerDB.pkl and (optionally) an existing k-mer file; it
