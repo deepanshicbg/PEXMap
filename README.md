@@ -105,12 +105,13 @@ If you downloaded `octamerDB_latest.pkl`, either rename it to `octamerDB.pkl` or
 
 ## Input format
 
-PEXMap does **not** identify peptides from spectra. Its input is a list of peptides that have **already been identified and FDR-controlled** by your search engine or resource (e.g. PeptideAtlas).
+PEXMap does **not** identify peptides from spectra. Its input is a list of peptides that have **already been identified and FDR-controlled**. You can either provide such a list directly (e.g. from PeptideAtlas), or start from your search engine's PSM file and let [Step 0](#step-0--prepare-peptides-from-a-psm-file-optional) control the FDR and create the list.
 
 - One peptide per line, uppercase one-letter amino-acid code.
 - No modification symbols (e.g. `M(ox)`), charges or flanking residues.
 - Remove common contaminants (keratins, trypsin, BSA, e.g. the cRAP list) **before** running PEXMap; see [Contaminants](#contaminants-and-low-coverage-mappings).
 - Peptides shorter than 8 residues cannot form an 8-mer; they are counted and reported, not silently dropped.
+- Starting from a PSM file instead? See [Step 0](#step-0--prepare-peptides-from-a-psm-file-optional).
 
 Example (`input_peptides.txt`):
 
@@ -126,7 +127,48 @@ The length filter is the only filter applied by these scripts. Any other filteri
 
 ## Running PEXMap
 
-PEXMap runs in three steps. Steps 1 and 2 produce the annotation; Step 3 is a recommended check.
+PEXMap runs in three steps. Steps 1 and 2 produce the annotation; Step 3 is a recommended check. Step 0 is optional and only needed if you start from a PSM file.
+
+### Step 0 — Prepare peptides from a PSM file (optional)
+
+```
+python scripts/prepare_peptides.py --input msms.txt --output input_peptides.txt --fdr 0.01
+```
+
+Reads peptide-spectrum matches (PSMs), controls the **peptide-level FDR**, removes decoys and contaminants, converts modified peptides to plain sequences (e.g. `_M(Oxidation (M))PEPTIDE_` or `K.PEPT[+79.97]IDE.R` → `MPEPTIDE`, `PEPTIDE`), and writes one peptide per line for Step 1.
+
+| Input | Format name | How FDR is controlled |
+| ----- | ----------- | --------------------- |
+| MaxQuant `msms.txt` / `evidence.txt` | `maxquant` | target-decoy competition on `Score`, decoys from `Reverse` |
+| Percolator input (`.pin`) | `pin` | target-decoy competition on the score given with `--score_col`, decoys from `Label` |
+| Percolator or mokapot results | `percolator` | the q-values in the file |
+| FragPipe `psm.tsv` / `peptide.tsv` | `fragpipe` | none: the file is already FDR-filtered by FragPipe; FDR is not re-estimated |
+| Any other table (tab or comma) | `generic` | give `--peptide_col` and `--score_col` (target-decoy) or `--qvalue_col` |
+
+The format is detected from the column names; use `--format` to set it explicitly.
+
+**How the FDR is estimated (target-decoy competition):** PSMs are grouped by their plain peptide sequence, and each peptide is represented by its best-scoring PSM. Peptides are ranked by score, and at each score threshold FDR = (decoy peptides + 1) / target peptides. Each peptide's q-value is the lowest FDR at which it would be accepted; peptides with q-value ≤ `--fdr` are kept. The search must have included decoy sequences (e.g. reversed proteins) for this to work.
+
+Main options:
+
+| Argument | Description |
+| -------- | ----------- |
+| `--input` / `--output` | PSM file / peptide list for Step 1 |
+| `--format` | `auto` (default), `maxquant`, `pin`, `percolator`, `fragpipe` or `generic` |
+| `--fdr` | peptide-level FDR threshold (default 0.01 = 1%) |
+| `--peptide_col`, `--score_col`, `--qvalue_col`, `--protein_col`, `--decoy_col` | column names, for `generic` files or to override the defaults |
+| `--lower_is_better` | lower scores are better (e.g. e-values) |
+| `--decoy_prefix` | protein prefixes marking decoys (default `REV__,rev_,DECOY_,decoy_,XXX_`) |
+| `--contaminant_prefix` | protein prefixes marking contaminants (default `CON__,contam_,Cont_,CONT_`) |
+| `--assume_filtered` | accept a file that is already FDR-filtered and has no decoys or q-values |
+
+Writes the peptide list, `<output>.table.tsv` (every target peptide with its q-value, number of PSMs, proteins and whether it was kept) and `<output>.summary.txt`. Contaminants are removed after FDR estimation, so they still count as targets when the FDR is calculated.
+
+Notes:
+
+- The FDR is controlled at the **peptide** level. It does not by itself give an error rate for exon-, junction- or isoform-level conclusions drawn later.
+- For Percolator or mokapot, use the **peptide-level** results file (`--results-peptides`, `mokapot.peptides.txt`). If a PSM-level file is given, each peptide takes its best PSM q-value and the summary says so.
+- Peptides containing non-standard residues (B, J, O, U, X, Z) are removed, because they cannot match the reference.
 
 ### Step 1 — Generate k-mers
 
@@ -396,6 +438,7 @@ Runtime is dominated by loading the ~1 GB database into memory; the lookup itsel
 ```
 PEXMap
 ├── scripts
+│   ├── prepare_peptides.py           # Step 0 (optional): PSM file -> FDR-controlled peptides
 │   ├── generate_kmers.py             # Step 1: peptides -> k-mers
 │   ├── annotate_peptides.py          # Step 2: k-mer annotation and QC summary
 │   ├── extract_sequences.py          # builds transcript sequences for Step 3

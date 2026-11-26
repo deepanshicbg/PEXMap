@@ -23,6 +23,7 @@
 # --- PEXMap scripts ---
 !/scripts/
 /scripts/*
+!/scripts/prepare_peptides.py
 !/scripts/generate_kmers.py
 !/scripts/annotate_peptides.py
 !/scripts/build_database.py
