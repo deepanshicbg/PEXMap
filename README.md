@@ -267,7 +267,7 @@ This adds an `Exact_match` column: `PASS`, `FAIL`, `NA` (multi_gene or no transc
 
 ### Run everything from spectra in one command
 
-If you have mass spectra rather than identified peptides, `run_pexmap.py` runs the whole workflow: it searches the spectra with the [Sage](https://github.com/lazear/sage) search engine and then runs Steps 0–3.
+If you have mass spectra rather than identified peptides, `run_pexmap.py` runs the whole workflow: it searches the spectra with a search engine of your choice (default: [Sage](https://github.com/lazear/sage)) and then runs Steps 0–3.
 
 ```
 python scripts/run_pexmap.py \
@@ -278,17 +278,37 @@ python scripts/run_pexmap.py \
   --output my_results
 ```
 
+**Choosing the search engine** (`--engine`)
+
+| Engine | `--engine` | Install | How the FDR is controlled |
+| ------ | ---------- | ------- | ------------------------- |
+| [Sage](https://github.com/lazear/sage) (default) | `sage` | single program, open source | Sage's peptide-level q-values (Sage adds the decoys) |
+| [Comet](https://uwpr.github.io/Comet/) | `comet` | single program, open source | Step 0 target-decoy competition on Xcorr (Comet adds the decoys) |
+| [MSFragger](https://msfragger.nesvilab.org/) | `msfragger` | `MSFragger.jar` + Java; free for academic use, licence required | Step 0 target-decoy competition on the hyperscore (PEXMap adds reversed decoys to the database) |
+
+```
+# Comet
+python scripts/run_pexmap.py --engine comet --spectra sample1.mzML --database data/octamerDB.pkl --sequences data/transcript_sequences.pkl --output my_results
+
+# MSFragger
+python scripts/run_pexmap.py --engine msfragger --engine_path /path/to/MSFragger.jar --java_memory 32g --spectra sample1.mzML --database data/octamerDB.pkl --sequences data/transcript_sequences.pkl --output my_results
+```
+
+For Comet and MSFragger, the parameter file is created from the engine's own default template (`comet -p`, `java -jar MSFragger.jar --config`) and only the search settings below are changed, so it matches the installed version. To use your own parameter file instead, give it with `--engine_params` (its database setting is replaced by the PEXMap search database). Comet chooses enzymes by number from its own list, so for enzymes other than trypsin, edit `comet.params` and pass it with `--engine_params`.
+
+Engines identify different, partly overlapping sets of peptides, so report which engine and settings you used (they are saved in the output folder).
+
 **What you need**
 
 - Spectra in **mzML** format. Convert raw instrument files first, e.g. with ProteoWizard MSConvert (`msconvert sample.raw --mzML --filter "peakPicking true 1-"`).
-- **Sage** installed (a single program, from https://github.com/lazear/sage/releases), either on the PATH or given with `--sage path/to/sage`.
+- The chosen search engine installed: Sage or Comet on the PATH (or give its location with `--engine_path`), or `MSFragger.jar` given with `--engine_path` plus Java.
 - The PEXMap database and the transcript sequence file (see [Step 3](#step-3--verify-each-assignment-recommended)).
 - Optional but recommended: a FASTA of common contaminants (e.g. the cRAP list) for `--contaminants`.
 
 **What it does**
 
-1. Builds the search database from **PEXMap's own reference isoforms**, so every peptide the search can identify is also present in the PEXMap reference. Contaminants are added with the prefix `CON__`; Sage adds reversed decoy sequences (prefix `rev_`).
-2. Writes a Sage configuration file and searches the spectra.
+1. Builds the search database from **PEXMap's own reference isoforms**, so every peptide the search can identify is also present in the PEXMap reference. Contaminants are added with the prefix `CON__`; decoys are reversed sequences with the prefix `rev_`.
+2. Writes the engine's parameter file and searches the spectra.
 3. Runs Step 0 (peptide-level FDR, default 1%), Step 1, Step 2 and Step 3 (failed assignments removed).
 
 **Search settings** (defaults suit a standard tryptic human experiment; check them with whoever ran the mass spectrometer):
@@ -314,11 +334,11 @@ Experiments with other enzymes or labels (e.g. TMT) need the matching settings; 
 | `annotations_verified.tsv` | **main result**: verified gene / transcript / exon / junction assignments |
 | `annotations.tsv`, `annotations.tsv.unmapped.txt` | Step 2 output and unmapped peptides |
 | `peptides.txt`, `peptides.txt.table.tsv` | FDR-controlled peptides and per-peptide details |
-| `sage/results.sage.tsv` | Sage's search results |
-| `sage_config.json`, `search_database.fasta` | the exact search settings and database used, for reporting |
+| `<engine>/` | the search engine's results (`results.sage.tsv`, or `.pin` files combined into `combined.pin`) and its parameter file |
+| `search_database.fasta` | the exact database searched, for reporting |
 | `run_pexmap.log` | all messages |
 
-Useful options: `--dry_run` writes the database and configuration and prints every command without running anything; `--sage_results results.sage.tsv` reruns the PEXMap steps on an existing search without searching again.
+Useful options: `--dry_run` prepares the database and parameters and prints every command without running the search; `--search_results` reruns the PEXMap steps on an existing search (`results.sage.tsv` for Sage, a `.pin` file for Comet or MSFragger) without searching again.
 
 ---
 
@@ -498,7 +518,7 @@ Runtime is dominated by loading the ~1 GB database into memory; the lookup itsel
 ```
 PEXMap
 ├── scripts
-│   ├── run_pexmap.py                 # spectra -> Sage search -> Steps 0-3 in one command
+│   ├── run_pexmap.py                 # spectra -> search (Sage/Comet/MSFragger) -> Steps 0-3
 │   ├── prepare_peptides.py           # Step 0 (optional): PSM file -> FDR-controlled peptides
 │   ├── generate_kmers.py             # Step 1: peptides -> k-mers
 │   ├── annotate_peptides.py          # Step 2: k-mer annotation and QC summary

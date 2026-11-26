@@ -242,7 +242,11 @@ def is_decoy(row, proteins):
     if decoy_i is not None:
         v = row[decoy_i].strip().lower() if decoy_i < len(row) else ""
         if header[decoy_i].lower() == "label":   # Percolator: 1 / -1; mokapot: True / False
-            return v in ("-1", "false")
+            if v in ("-1", "false"):
+                return True
+            # also accept decoys named by protein prefix (some engines label every row 1)
+            return bool(proteins) and bool(DECOY_PREFIXES) and all(
+                any(p.startswith(d) for d in DECOY_PREFIXES) for p in proteins)
         return v in DECOY_VALUES
     if proteins and DECOY_PREFIXES:
         return all(any(p.startswith(d) for d in DECOY_PREFIXES) for p in proteins)
