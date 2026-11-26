@@ -139,6 +139,7 @@ Reads peptide-spectrum matches (PSMs), controls the **peptide-level FDR**, remov
 
 | Input | Format name | How FDR is controlled |
 | ----- | ----------- | --------------------- |
+| Sage `results.sage.tsv` | `sage` | the peptide-level q-values (`peptide_q`) reported by Sage |
 | MaxQuant `msms.txt` / `evidence.txt` | `maxquant` | target-decoy competition on `Score`, decoys from `Reverse` |
 | Percolator input (`.pin`) | `pin` | target-decoy competition on the score given with `--score_col`, decoys from `Label` |
 | Percolator or mokapot results | `percolator` | the q-values in the file |
@@ -146,6 +147,15 @@ Reads peptide-spectrum matches (PSMs), controls the **peptide-level FDR**, remov
 | Any other table (tab or comma) | `generic` | give `--peptide_col` and `--score_col` (target-decoy) or `--qvalue_col` |
 
 The format is detected from the column names; use `--format` to set it explicitly.
+
+**Starting from raw mass spectra:** PEXMap does not search spectra itself. Search them first with a database search engine (for example Sage, MSFragger/FragPipe, MaxQuant or Comet) against a protein database **with decoy sequences**, then give the search engine's PSM file to Step 0. For example, with Sage (open-source):
+
+```
+sage config.json spectra.mzML                  # writes results.sage.tsv
+python scripts/prepare_peptides.py --input results.sage.tsv --output input_peptides.txt
+```
+
+Use the same protein sequences for the search as in the PEXMap reference (e.g. RefSeq human proteins for octamerDB), so that identified peptides can be found in the reference. If the search engine already filters its results at 1% FDR, either use its own q-values (Sage, Percolator, mokapot) or set its FDR to 100% so that Step 0 sees all target and decoy matches.
 
 **How the FDR is estimated (target-decoy competition):** PSMs are grouped by their plain peptide sequence, and each peptide is represented by its best-scoring PSM. Peptides are ranked by score, and at each score threshold FDR = (decoy peptides + 1) / target peptides. Each peptide's q-value is the lowest FDR at which it would be accepted; peptides with q-value ≤ `--fdr` are kept. The search must have included decoy sequences (e.g. reversed proteins) for this to work.
 

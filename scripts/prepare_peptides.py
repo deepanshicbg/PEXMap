@@ -22,6 +22,7 @@ Three ways of controlling FDR, chosen automatically from the input:
             re-estimated.
 
 Supported inputs (--format, detected automatically from the header):
+  sage        Sage results.sage.tsv (peptide, label, peptide_q)
   maxquant    MaxQuant msms.txt / evidence.txt (Sequence, Score, Reverse)
   pin         Percolator input (SpecId, Label, ..., Peptide, Proteins); needs --score_col
   percolator  Percolator or mokapot results (peptide, q-value columns)
@@ -51,7 +52,7 @@ parser.add_argument("--input", required=True, help="PSM file from a search engin
 parser.add_argument("--output", required=True,
                     help="output peptide list (one plain sequence per line), input for generate_kmers.py")
 parser.add_argument("--format", default="auto",
-                    choices=["auto", "maxquant", "pin", "percolator", "fragpipe", "generic"],
+                    choices=["auto", "sage", "maxquant", "pin", "percolator", "fragpipe", "generic"],
                     help="input format (default: detect from the header)")
 parser.add_argument("--fdr", type=float, default=0.01,
                     help="peptide-level FDR threshold (default: 0.01 = 1%%)")
@@ -149,6 +150,8 @@ def find_col(header, wanted, required=True, label=""):
 
 def detect_format(header):
     h = {x.lower() for x in header}
+    if "peptide_q" in h and "label" in h and "peptide" in h:
+        return "sage"
     if "reverse" in h and "sequence" in h and "score" in h:
         return "maxquant"
     if "specid" in h and "label" in h and "peptide" in h and not any("q-value" in x for x in h):
@@ -172,7 +175,14 @@ pep_i = score_i = q_i = prot_i = decoy_i = None
 protein_tail = False       # Percolator files list proteins in all columns after 'Proteins'
 mode = None
 
-if fmt == "maxquant":
+if fmt == "sage":
+    # Sage reports a peptide-level q-value (peptide_q) on every PSM row, decoys as label = -1
+    pep_i = find_col(header, args.peptide_col or "peptide", label="peptide")
+    q_i = find_col(header, args.qvalue_col or "peptide_q", label="q-value")
+    prot_i = find_col(header, args.protein_col or "proteins", required=False)
+    decoy_i = find_col(header, args.decoy_col or "label", label="decoy")
+    mode = "qvalue"
+elif fmt == "maxquant":
     pep_i = find_col(header, args.peptide_col or "Sequence", label="peptide")
     score_i = find_col(header, args.score_col or "Score", label="score")
     prot_i = find_col(header, args.protein_col or ["Proteins", "Leading razor protein"], required=False)
@@ -258,7 +268,13 @@ psms = []                 # dicts: seq, score, q, decoy, contaminant, proteins
 skipped_empty = 0
 ambiguous = set()
 
+rank_i = find_col(header, "rank", required=False) if fmt == "sage" else None
+skipped_rank = 0
+
 for n, row in enumerate(rows, start=2):
+    if rank_i is not None and rank_i < len(row) and row[rank_i].strip() not in ("", "1"):
+        skipped_rank += 1
+        continue
     if pep_i >= len(row):
         skipped_empty += 1
         continue
@@ -362,7 +378,7 @@ if mode == "tdc":
     psm_q = tdc_qvalues([(p["score"], p["decoy"]) for p in psms])
     psms_passing = sum(1 for p, q in zip(psms, psm_q) if not p["decoy"] and q <= args.fdr)
 
-psm_level_qvalues = (mode == "qvalue"
+psm_level_qvalues = (mode == "qvalue" and fmt != "sage"
                      and any(len([p for p in g if not p["decoy"]]) > 1 for g in by_seq.values()))
 
 
@@ -431,6 +447,8 @@ lines += [
     "",
     f"PSMs read: {len(psms)} ({n_target_psms} target, {n_decoy_psms} decoy)",
 ]
+if skipped_rank:
+    lines.append(f"Lower-ranked PSMs ignored (rank > 1): {skipped_rank}")
 if skipped_empty:
     lines.append(f"Rows without a peptide sequence (skipped): {skipped_empty}")
 if mode == "tdc":
