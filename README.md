@@ -43,6 +43,8 @@ python scripts/annotate_peptides.py --kmers my_kmers.txt --database data/octamer
 
 Then check the results against the expected numbers in [Example run with expected results](#example-run-with-expected-results).
 
+Starting from mass spectra instead? One command runs the search and every step: see [Run everything from spectra](#run-everything-from-spectra-in-one-command).
+
 ---
 
 ## Installation
@@ -148,14 +150,7 @@ Reads peptide-spectrum matches (PSMs), controls the **peptide-level FDR**, remov
 
 The format is detected from the column names; use `--format` to set it explicitly.
 
-**Starting from raw mass spectra:** PEXMap does not search spectra itself. Search them first with a database search engine (for example Sage, MSFragger/FragPipe, MaxQuant or Comet) against a protein database **with decoy sequences**, then give the search engine's PSM file to Step 0. For example, with Sage (open-source):
-
-```
-sage config.json spectra.mzML                  # writes results.sage.tsv
-python scripts/prepare_peptides.py --input results.sage.tsv --output input_peptides.txt
-```
-
-Use the same protein sequences for the search as in the PEXMap reference (e.g. RefSeq human proteins for octamerDB), so that identified peptides can be found in the reference. If the search engine already filters its results at 1% FDR, either use its own q-values (Sage, Percolator, mokapot) or set its FDR to 100% so that Step 0 sees all target and decoy matches.
+**Starting from raw mass spectra?** Use [`run_pexmap.py`](#run-everything-from-spectra-in-one-command), which runs the search for you.
 
 **How the FDR is estimated (target-decoy competition):** PSMs are grouped by their plain peptide sequence, and each peptide is represented by its best-scoring PSM. Peptides are ranked by score, and at each score threshold FDR = (decoy peptides + 1) / target peptides. Each peptide's q-value is the lowest FDR at which it would be accepted; peptides with q-value ≤ `--fdr` are kept. The search must have included decoy sequences (e.g. reversed proteins) for this to work.
 
@@ -269,6 +264,61 @@ This adds an `Exact_match` column: `PASS`, `FAIL`, `NA` (multi_gene or no transc
 | `--sequences` | transcript sequence file from `extract_sequences.py` |
 | `--output` | output table with the added `Exact_match` column |
 | `--drop_failed` | remove `FAIL` rows from the output instead of flagging them |
+
+### Run everything from spectra in one command
+
+If you have mass spectra rather than identified peptides, `run_pexmap.py` runs the whole workflow: it searches the spectra with the [Sage](https://github.com/lazear/sage) search engine and then runs Steps 0–3.
+
+```
+python scripts/run_pexmap.py \
+  --spectra sample1.mzML sample2.mzML \
+  --database data/octamerDB.pkl \
+  --sequences data/transcript_sequences.pkl \
+  --contaminants crap.fasta \
+  --output my_results
+```
+
+**What you need**
+
+- Spectra in **mzML** format. Convert raw instrument files first, e.g. with ProteoWizard MSConvert (`msconvert sample.raw --mzML --filter "peakPicking true 1-"`).
+- **Sage** installed (a single program, from https://github.com/lazear/sage/releases), either on the PATH or given with `--sage path/to/sage`.
+- The PEXMap database and the transcript sequence file (see [Step 3](#step-3--verify-each-assignment-recommended)).
+- Optional but recommended: a FASTA of common contaminants (e.g. the cRAP list) for `--contaminants`.
+
+**What it does**
+
+1. Builds the search database from **PEXMap's own reference isoforms**, so every peptide the search can identify is also present in the PEXMap reference. Contaminants are added with the prefix `CON__`; Sage adds reversed decoy sequences (prefix `rev_`).
+2. Writes a Sage configuration file and searches the spectra.
+3. Runs Step 0 (peptide-level FDR, default 1%), Step 1, Step 2 and Step 3 (failed assignments removed).
+
+**Search settings** (defaults suit a standard tryptic human experiment; check them with whoever ran the mass spectrometer):
+
+| Argument | Default | Meaning |
+| -------- | ------- | ------- |
+| `--cleave_at` / `--restrict` | `KR` / `P` | trypsin: cut after K or R, not before P |
+| `--missed_cleavages` | 2 | |
+| `--min_len` / `--max_len` | 7 / 50 | peptide lengths searched |
+| `--static_mods` | `C:57.0215` | fixed modifications, `residue:mass` (carbamidomethyl cysteine) |
+| `--variable_mods` | `M:15.9949` | variable modifications, `residue:mass` (oxidised methionine) |
+| `--precursor_ppm` / `--fragment_ppm` | 10 / 20 | mass tolerances (± ppm) |
+| `--fdr` | 0.01 | peptide-level FDR for Step 0 |
+| `--min_coverage` | 0 | coverage threshold for Step 2 |
+
+Experiments with other enzymes or labels (e.g. TMT) need the matching settings; wrong settings give few identifications without an error.
+
+**Output folder**
+
+| File | Contents |
+| ---- | -------- |
+| `summary.txt` | the main numbers from every step |
+| `annotations_verified.tsv` | **main result**: verified gene / transcript / exon / junction assignments |
+| `annotations.tsv`, `annotations.tsv.unmapped.txt` | Step 2 output and unmapped peptides |
+| `peptides.txt`, `peptides.txt.table.tsv` | FDR-controlled peptides and per-peptide details |
+| `sage/results.sage.tsv` | Sage's search results |
+| `sage_config.json`, `search_database.fasta` | the exact search settings and database used, for reporting |
+| `run_pexmap.log` | all messages |
+
+Useful options: `--dry_run` writes the database and configuration and prints every command without running anything; `--sage_results results.sage.tsv` reruns the PEXMap steps on an existing search without searching again.
 
 ---
 
@@ -448,6 +498,7 @@ Runtime is dominated by loading the ~1 GB database into memory; the lookup itsel
 ```
 PEXMap
 ├── scripts
+│   ├── run_pexmap.py                 # spectra -> Sage search -> Steps 0-3 in one command
 │   ├── prepare_peptides.py           # Step 0 (optional): PSM file -> FDR-controlled peptides
 │   ├── generate_kmers.py             # Step 1: peptides -> k-mers
 │   ├── annotate_peptides.py          # Step 2: k-mer annotation and QC summary

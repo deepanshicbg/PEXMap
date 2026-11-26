@@ -68,7 +68,8 @@ with open(args.annotations) as f, open(args.output, "w") as out:
 
 print("Total annotated peptides:", total)
 if total == 0:
-    raise SystemExit("No annotated peptides found in the input file.")
+    print("No annotated peptides to verify; the output contains only the header line.")
+    raise SystemExit(0)
 print(f"  Exact-substring verified (PASS): {verified} ({verified/total*100:.1f}%)")
 print(f"  Failed verification (FAIL, false-positive mode): {failed} ({failed/total*100:.1f}%)")
 print(f"  Skipped (multi_gene / NA / no transcript call): {skipped_ambiguous}")
